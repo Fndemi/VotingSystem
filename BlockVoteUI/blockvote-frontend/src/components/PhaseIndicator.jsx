@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import apiService from '../services/api';
 
 export const PhaseIndicator = () => {
   const [currentPhase, setCurrentPhase] = useState(null);
@@ -7,8 +8,7 @@ export const PhaseIndicator = () => {
   useEffect(() => {
     const fetchPhase = async () => {
       try {
-        const response = await fetch('http://localhost:5000/api/phases/current');
-        const data = await response.json();
+        const data = await apiService.get('/phases/current');
         setCurrentPhase(data);
       } catch (error) {
         console.error('Error fetching phase:', error);

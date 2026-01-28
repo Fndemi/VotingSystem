@@ -14,6 +14,7 @@ import { AdminLogin } from './components/AdminLogin';
 import { EnhancedLoginWithAutocomplete } from './components/EnhancedLoginWithAutocomplete';
 import { EnhancedRegistrationWithAutocomplete } from './components/EnhancedRegistrationWithAutocomplete';
 import { LandingPage } from './components/LandingPage';
+import { CandidateStatusNotification } from './components/CandidateStatusNotification';
 import ApiService from './services/api';
 
 function AppContent() {
@@ -31,7 +32,7 @@ function AppContent() {
       try {
         const token = localStorage.getItem('authToken');
         if (token) {
-          const response = await fetch('http://localhost:5000/api/auth/validate', {
+          const response = await fetch(`${import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api'}/auth/validate`, {
             headers: { 'Authorization': `Bearer ${token}` }
           });
 
@@ -53,7 +54,7 @@ function AppContent() {
 
     const loadPhase = async () => {
       try {
-        const response = await fetch('http://localhost:5000/api/phases/current');
+        const response = await fetch(`${import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api'}/phases/current`);
         if (response.ok) {
           const data = await response.json();
           setCurrentPhase(data.currentPhase);
@@ -236,10 +237,15 @@ function AppContent() {
         );
         break;
       case 1: // Candidate Registration
-        content = <Web2CandidateRegistration />;
+        content = <Web2CandidateRegistration user={currentUser} />;
         break;
       case 2: // Delegate Voting
-        content = <DelegateVoting user={currentUser} />;
+        content = (
+          <div>
+            <CandidateStatusNotification user={currentUser} />
+            <DelegateVoting user={currentUser} />
+          </div>
+        );
         break;
       case 3: // Nominee Registration (Skipped in Web2)
         content = (
@@ -254,17 +260,25 @@ function AppContent() {
         break;
       case 4: // Party Registration (Admin only)
         content = (
-          <div className="p-4 sm:p-8 text-center bg-white rounded-lg shadow-xl max-w-2xl mx-auto">
-            <h2 className="text-xl sm:text-2xl font-bold mb-4 text-gray-800">🏛️ Party Registration Phase</h2>
-            <p className="text-gray-600 mb-4 text-sm sm:text-base">
-              The admin is currently registering parties with their nominees.
-            </p>
-            <p className="text-yellow-600 text-sm sm:text-base">Please check back when council voting begins.</p>
+          <div>
+            <CandidateStatusNotification user={currentUser} />
+            <div className="p-4 sm:p-8 text-center bg-white rounded-lg shadow-xl max-w-2xl mx-auto">
+              <h2 className="text-xl sm:text-2xl font-bold mb-4 text-gray-800">🏛️ Party Registration Phase</h2>
+              <p className="text-gray-600 mb-4 text-sm sm:text-base">
+                The admin is currently registering parties with their nominees.
+              </p>
+              <p className="text-yellow-600 text-sm sm:text-base">Please check back when council voting begins.</p>
+            </div>
           </div>
         );
         break;
       case 5: // Council Voting
-        content = <Web2CouncilVoting user={currentUser} />;
+        content = (
+          <div>
+            <CandidateStatusNotification user={currentUser} />
+            <Web2CouncilVoting user={currentUser} />
+          </div>
+        );
         break;
       case 6: // Ended
         content = (

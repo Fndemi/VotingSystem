@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { ModernCard } from './ModernCard';
+import apiService from '../services/api';
 
 export const AdminLogin = ({ onLogin, onBack }) => {
   const [username, setUsername] = useState('');
@@ -13,14 +14,8 @@ export const AdminLogin = ({ onLogin, onBack }) => {
     setLoading(true);
 
     try {
-      const response = await fetch('http://localhost:5000/api/auth/admin-login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username, password })
-      });
-
-      const data = await response.json();
-
+      const data = await apiService.post('/auth/admin-login', { username, password });
+      
       if (data.success) {
         localStorage.setItem('adminToken', data.token);
         onLogin(data.user);
@@ -28,7 +23,7 @@ export const AdminLogin = ({ onLogin, onBack }) => {
         setError(data.message || 'Login failed');
       }
     } catch (error) {
-      setError('Connection error. Please try again.');
+      setError(error.message || 'Connection error. Please try again.');
     } finally {
       setLoading(false);
     }

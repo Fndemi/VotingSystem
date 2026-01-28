@@ -5,7 +5,7 @@
  * Use this when the blockchain has been reset but Web2 is out of sync
  */
 
-const API_BASE_URL = 'http://localhost:5000/api';
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api';
 
 async function resetWeb2Phase() {
   try {

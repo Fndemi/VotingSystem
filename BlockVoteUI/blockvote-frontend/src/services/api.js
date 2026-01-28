@@ -1,4 +1,4 @@
-const API_BASE_URL = 'http://localhost:5000/api';
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api';
 
 class ApiService {
   constructor() {
@@ -64,7 +64,7 @@ class ApiService {
       return result;
     } catch (error) {
       if (error.name === 'TypeError' && error.message.includes('fetch')) {
-        throw new Error('Cannot connect to server. Please check if the backend is running on http://localhost:5000');
+        throw new Error('Cannot connect to server. Please check if the backend is running.');
       }
       throw error;
     }
@@ -195,7 +195,8 @@ class ApiService {
 
   // Delegate candidates (Web2)
   async getDelegateCandidateStatus(registrationNumber) {
-    return this.get(`/delegate-candidates/status/${registrationNumber}`);
+    const encodedRegNo = encodeURIComponent(registrationNumber);
+    return this.get(`/delegate-candidates/status/${encodedRegNo}`);
   }
 
   async registerDelegateCandidate(data) {
@@ -233,6 +234,10 @@ class ApiService {
   }
 
   async getAllElectedDelegates() {
+    return this.get('/delegate-voting/results');
+  }
+
+  async getElectedDelegates() {
     return this.get('/delegate-voting/results');
   }
 

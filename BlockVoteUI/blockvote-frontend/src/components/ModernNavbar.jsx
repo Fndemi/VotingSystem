@@ -35,7 +35,8 @@ export const ModernNavbar = ({ currentUser, onLogout, onGoHome }) => {
           const status = await ApiService.getDelegateCandidateStatus(currentUser.registrationNumber);
           setDelegateStatus(status);
         } catch (error) {
-          console.error('Error checking delegate status:', error);
+          // Silently handle 404 - student has no candidate application
+          setDelegateStatus(null);
         } finally {
           setLoadingDelegate(false);
         }

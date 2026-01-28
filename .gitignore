@@ -160,6 +160,10 @@ Thumbs.db
 .vercel
 .netlify
 
+# Render deployment
+.render
+render.yaml
+
 # PM2 files
 ecosystem.config.js
 

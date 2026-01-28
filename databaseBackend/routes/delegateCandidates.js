@@ -117,33 +117,64 @@ router.get('/department/:schoolId/:departmentId', async (req, res) => {
 // Get candidate status for a student
 router.get('/status/:registrationNumber', async (req, res) => {
   try {
+    console.log('Getting status for registration number:', req.params.registrationNumber);
     const student = await Student.findOne({
       registrationNumber: req.params.registrationNumber,
       isActive: true,
     });
 
     if (!student) {
+      console.log('Student not found:', req.params.registrationNumber);
       return res.status(404).json({ error: 'Student not found or inactive' });
     }
 
+    console.log('Found student:', student.name, 'ID:', student._id);
     const candidate = await DelegateCandidate.findOne({
       studentId: student._id,
       isActive: true,
     });
 
     if (!candidate) {
+      console.log('No candidate application found for student:', student._id);
       return res.json({ isCandidate: false });
     }
 
-    res.json({
+    // Fix for existing candidates without status field - force update
+    if (candidate.status === undefined || candidate.status === null) {
+      console.log('Fixing candidate without status field');
+      await DelegateCandidate.updateOne(
+        { _id: candidate._id },
+        { $set: { status: 'pending', adminComments: '', reviewedBy: null, reviewedAt: null } }
+      );
+      candidate.status = 'pending';
+      candidate.adminComments = '';
+      console.log('Updated candidate with default values');
+    }
+
+    console.log('Found candidate application:', {
+      id: candidate._id,
+      status: candidate.status,
+      adminComments: candidate.adminComments,
+      reviewedAt: candidate.reviewedAt
+    });
+
+    const responseData = {
       isCandidate: true,
       candidate: {
         id: candidate._id,
         manifesto: candidate.manifesto,
         voteCount: candidate.voteCount,
+        status: candidate.status || 'pending',
+        adminComments: candidate.adminComments || '',
+        reviewedAt: candidate.reviewedAt,
+        appliedAt: candidate.createdAt
       },
-    });
+    };
+    
+    console.log('Sending response:', JSON.stringify(responseData, null, 2));
+    res.json(responseData);
   } catch (error) {
+    console.error('Error in status endpoint:', error);
     res.status(500).json({ error: error.message });
   }
 });

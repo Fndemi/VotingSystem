@@ -3,6 +3,7 @@ const router = express.Router();
 const Party = require('../models/Party');
 const Student = require('../models/Student');
 const Phase = require('../models/Phase');
+const ElectedDelegate = require('../models/ElectedDelegate');
 
 // Helper: get latest phase number
 async function getCurrentPhaseNumber() {
@@ -65,6 +66,17 @@ router.post('/register', async (req, res) => {
           error: `${student.name} has a mean score below 60 and cannot be a nominee` 
         });
       }
+    }
+
+    // Check if any student is an elected delegate
+    const electedDelegates = await ElectedDelegate.find({ studentId: { $in: allStudentIds } });
+    if (electedDelegates.length > 0) {
+      const delegateStudent = students.find(s => 
+        electedDelegates.some(d => d.studentId.toString() === s._id.toString())
+      );
+      return res.status(400).json({ 
+        error: `${delegateStudent.name} is an elected delegate and cannot be a party nominee` 
+      });
     }
 
     // Check if any student is already in another party

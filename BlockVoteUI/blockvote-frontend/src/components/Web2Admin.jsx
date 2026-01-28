@@ -15,6 +15,9 @@ export const Web2Admin = () => {
   const [toast, setToast] = useState(null);
   const [stats, setStats] = useState({});
   const [showResetModal, setShowResetModal] = useState(false);
+  const [showRejectModal, setShowRejectModal] = useState(false);
+  const [selectedApplication, setSelectedApplication] = useState(null);
+  const [rejectionReason, setRejectionReason] = useState('');
 
   const web2Phases = [
     { number: 0, name: 'Registration', icon: '📝', color: 'blue' },
@@ -96,13 +99,32 @@ export const Web2Admin = () => {
     }
   };
 
-  const handleReviewApplication = async (applicationId, status, comments = '') => {
+  const handleApproveApplication = async (applicationId) => {
     try {
-      await ApiService.reviewApplication(applicationId, status, comments);
+      await ApiService.reviewApplication(applicationId, 'approved', '');
       await loadData();
-      showToast(`Application ${status} successfully`, 'success');
+      showToast('Application approved successfully', 'success');
     } catch (error) {
-      showToast(`Failed to ${status} application`, 'error');
+      showToast('Failed to approve application', 'error');
+    }
+  };
+
+  const handleRejectApplication = (app) => {
+    setSelectedApplication(app);
+    setRejectionReason('');
+    setShowRejectModal(true);
+  };
+
+  const confirmRejectApplication = async () => {
+    try {
+      await ApiService.reviewApplication(selectedApplication.id, 'rejected', rejectionReason);
+      await loadData();
+      showToast('Application rejected successfully', 'success');
+      setShowRejectModal(false);
+      setSelectedApplication(null);
+      setRejectionReason('');
+    } catch (error) {
+      showToast('Failed to reject application', 'error');
     }
   };
 
@@ -441,18 +463,13 @@ export const Web2Admin = () => {
                     
                     <div className="flex gap-2">
                       <button
-                        onClick={() => handleReviewApplication(app.id, 'approved')}
+                        onClick={() => handleApproveApplication(app.id)}
                         className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
                       >
                         ✓ Approve
                       </button>
                       <button
-                        onClick={() => {
-                          const comments = prompt('Rejection reason (optional):');
-                          if (comments !== null) {
-                            handleReviewApplication(app.id, 'rejected', comments);
-                          }
-                        }}
+                        onClick={() => handleRejectApplication(app)}
                         className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
                       >
                         ✗ Reject
@@ -523,6 +540,44 @@ Are you absolutely sure you want to continue?`}
         confirmText="Yes, Reset Election"
         cancelText="Cancel"
       />
+
+      {/* Rejection Modal */}
+      {showRejectModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">Reject Application</h3>
+            <p className="text-sm text-gray-600 mb-4">
+              Rejecting application from <strong>{selectedApplication?.name}</strong>
+            </p>
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Rejection Reason (optional)
+              </label>
+              <textarea
+                value={rejectionReason}
+                onChange={(e) => setRejectionReason(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500"
+                rows={3}
+                placeholder="Enter reason for rejection..."
+              />
+            </div>
+            <div className="flex gap-3 justify-end">
+              <button
+                onClick={() => setShowRejectModal(false)}
+                className="px-4 py-2 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={confirmRejectApplication}
+                className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors"
+              >
+                Reject Application
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
